@@ -1,0 +1,790 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>经纬地理团队 · MERIDIAN GEO</title>
+<meta name="description" content="经纬地理团队：一支专注自然地理、空间信息与区域发展的研究团队，行走在野外与数据之间。">
+<link rel="stylesheet" href="https://miaoda.feishu.cn/fonts/css2?family=Noto+Serif+SC:wght@500;600;700;900&family=Noto+Sans+SC:wght@300;400;500;700&display=swap">
+<style>
+/* ============================================================
+   设计系统：地图学质感 —— 等高线签名元素 · 经纬度标注
+   墨绿 ink / 苔藓 pine / 沙岩 sand / 纸面 paper / 赭橙 clay
+   ============================================================ */
+:root{
+  --ink:#132B24;
+  --ink-2:#1B3A30;
+  --pine:#2F5D50;
+  --pine-l:#4A7A6B;
+  --sand:#EFE9DB;
+  --paper:#F9F6EF;
+  --clay:#C96F33;
+  --clay-d:#A85521;
+  --text:#22312B;
+  --muted:#5E6D66;
+  --line:rgba(34,49,43,.14);
+  --line-l:rgba(239,233,219,.24);
+  --serif:"Noto Serif SC","Songti SC","SimSun",serif;
+  --sans:"Noto Sans SC","PingFang SC","Microsoft YaHei",sans-serif;
+  --maxw:1140px;
+  --nav-h:72px;
+  --radius:12px;
+  --shadow:0 18px 44px -22px rgba(19,43,36,.35);
+}
+*{margin:0;padding:0;box-sizing:border-box;}
+html{scroll-behavior:smooth;}
+body{
+  font-family:var(--sans);
+  color:var(--text);
+  background:var(--paper);
+  line-height:1.7;
+  font-size:16px;
+  -webkit-font-smoothing:antialiased;
+}
+::selection{background:var(--clay);color:#fff;}
+img{display:block;max-width:100%;}
+a{color:inherit;text-decoration:none;}
+button{font-family:inherit;}
+:focus-visible{outline:2px solid var(--clay);outline-offset:3px;border-radius:4px;}
+
+.wrap{max-width:var(--maxw);margin:0 auto;padding:0 28px;}
+
+/* ---------- 眉标（eyebrow） ---------- */
+.eyebrow{
+  display:inline-flex;align-items:center;gap:12px;
+  font-size:12px;letter-spacing:.32em;text-transform:uppercase;
+  color:var(--pine);font-weight:500;
+}
+.eyebrow::before{content:"";width:34px;height:1px;background:var(--clay);}
+.eyebrow.on-dark{color:var(--sand);}
+.eyebrow .coord{letter-spacing:.14em;color:var(--muted);}
+.eyebrow.on-dark .coord{color:rgba(239,233,219,.55);}
+
+/* ---------- 章节标题 ---------- */
+.sec-head{margin-bottom:52px;}
+.sec-title{
+  font-family:var(--serif);font-weight:700;
+  font-size:clamp(1.7rem,3.2vw,2.5rem);
+  line-height:1.25;margin-top:14px;color:var(--ink);
+  letter-spacing:.01em;
+}
+.sec-lead{margin-top:14px;max-width:640px;color:var(--muted);font-size:15.5px;font-weight:300;}
+
+section{padding:96px 0;}
+section.alt{background:var(--sand);}
+
+/* ============================================================
+   导航
+   ============================================================ */
+.site-nav{
+  position:fixed;inset:0 0 auto 0;height:var(--nav-h);z-index:100;
+  background:rgba(19,43,36,.82);
+  backdrop-filter:blur(14px);
+  -webkit-backdrop-filter:blur(14px);
+  border-bottom:1px solid var(--line-l);
+  transition:background .3s ease;
+}
+.nav-inner{height:var(--nav-h);display:flex;align-items:center;justify-content:space-between;gap:24px;}
+.brand{display:flex;align-items:center;gap:12px;color:var(--sand);}
+.brand-mark{
+  width:38px;height:38px;border:1px solid var(--line-l);border-radius:50%;
+  display:grid;place-items:center;color:var(--sand);
+  background:rgba(239,233,219,.06);
+}
+.brand-name{font-family:var(--serif);font-weight:700;font-size:17px;letter-spacing:.12em;line-height:1.1;}
+.brand-name small{display:block;font-family:var(--sans);font-size:9.5px;letter-spacing:.42em;font-weight:400;color:rgba(239,233,219,.6);margin-top:2px;}
+.nav-links{display:flex;align-items:center;gap:6px;list-style:none;}
+.nav-links a{
+  display:block;padding:10px 15px;font-size:14px;color:rgba(239,233,219,.86);
+  letter-spacing:.08em;border-radius:8px;transition:color .2s,background .2s;
+}
+.nav-links a:hover{color:#fff;background:rgba(239,233,219,.1);}
+.nav-cta{
+  margin-left:10px;padding:10px 18px !important;background:var(--clay);color:#fff !important;
+  border-radius:8px;letter-spacing:.1em;
+}
+.nav-cta:hover{background:var(--clay-d);}
+.nav-toggle{display:none;background:none;border:1px solid var(--line-l);border-radius:8px;width:44px;height:44px;color:var(--sand);cursor:pointer;}
+.nav-toggle svg{width:22px;height:22px;margin:auto;}
+
+/* ============================================================
+   Hero
+   ============================================================ */
+.hero{
+  position:relative;min-height:100svh;display:flex;align-items:center;
+  background:var(--ink);color:var(--sand);overflow:hidden;
+}
+.hero-bg{position:absolute;inset:0;}
+.hero-bg img{width:100%;height:100%;object-fit:cover;opacity:.5;}
+.hero-bg::after{
+  content:"";position:absolute;inset:0;
+  background:linear-gradient(112deg,rgba(19,43,36,.92) 8%,rgba(19,43,36,.55) 48%,rgba(27,58,48,.35) 100%);
+}
+.hero-contour{
+  position:absolute;right:-90px;bottom:-120px;width:640px;color:rgba(239,233,219,.16);
+  pointer-events:none;
+}
+.hero-loc{
+  position:absolute;right:32px;top:50%;transform:translateY(-50%);
+  writing-mode:vertical-rl;font-size:11px;letter-spacing:.34em;color:rgba(239,233,219,.5);
+  display:flex;align-items:center;gap:16px;pointer-events:none;
+}
+.hero-loc::after{content:"";width:1px;height:70px;background:rgba(239,233,219,.32);margin-left:6px;}
+.hero-inner{position:relative;z-index:2;padding:calc(var(--nav-h) + 40px) 0 90px;max-width:var(--maxw);margin:0 auto;width:100%;}
+.hero-eyebrow{
+  display:inline-flex;align-items:center;gap:14px;font-size:12px;letter-spacing:.4em;
+  color:rgba(239,233,219,.85);font-weight:500;
+}
+.hero-eyebrow::before{content:"";width:40px;height:1px;background:var(--clay);}
+.hero h1{
+  font-family:var(--serif);font-weight:900;
+  font-size:clamp(2.3rem,5.6vw,4.3rem);line-height:1.18;
+  margin:26px 0 22px;letter-spacing:.02em;
+}
+.hero h1 em{font-style:normal;color:#E8B88A;}
+.hero-sub{max-width:560px;font-size:16.5px;font-weight:300;color:rgba(239,233,219,.82);}
+.hero-actions{display:flex;flex-wrap:wrap;gap:14px;margin-top:38px;}
+.btn{
+  display:inline-flex;align-items:center;justify-content:center;gap:10px;
+  min-height:48px;padding:0 26px;border-radius:9px;font-size:15px;letter-spacing:.08em;
+  transition:background .2s,color .2s,transform .2s,border-color .2s;cursor:pointer;border:1px solid transparent;
+}
+.btn svg{width:16px;height:16px;}
+.btn-solid{background:var(--clay);color:#fff;}
+.btn-solid:hover{background:var(--clay-d);transform:translateY(-1px);}
+.btn-ghost{border-color:rgba(239,233,219,.5);color:var(--sand);}
+.btn-ghost:hover{border-color:var(--sand);background:rgba(239,233,219,.08);}
+.hero-scroll{
+  position:absolute;left:50%;bottom:26px;transform:translateX(-50%);
+  font-size:11px;letter-spacing:.4em;color:rgba(239,233,219,.55);
+  display:flex;flex-direction:column;align-items:center;gap:10px;z-index:2;
+}
+.hero-scroll::after{content:"";width:1px;height:44px;background:linear-gradient(rgba(239,233,219,.6),transparent);}
+
+/* ============================================================
+   关于
+   ============================================================ */
+.about-grid{display:grid;grid-template-columns:1.15fr .85fr;gap:64px;align-items:start;}
+.about-body p{color:var(--muted);font-weight:300;font-size:15.5px;}
+.about-body p + p{margin-top:16px;}
+.about-body strong{color:var(--ink);font-weight:600;}
+.pillars{display:grid;gap:14px;margin-top:34px;}
+.pillar{
+  display:flex;gap:18px;align-items:flex-start;
+  background:#fff;border:1px solid var(--line);border-radius:var(--radius);
+  padding:20px 22px;transition:transform .2s ease,border-color .2s ease;
+}
+.pillar:hover{transform:translateY(-2px);border-color:rgba(201,111,51,.5);}
+.pillar-icon{
+  flex:none;width:42px;height:42px;border-radius:10px;display:grid;place-items:center;
+  background:rgba(47,93,80,.1);color:var(--pine);
+}
+.pillar-icon svg{width:21px;height:21px;}
+.pillar h3{font-size:15.5px;font-weight:600;color:var(--ink);letter-spacing:.04em;}
+.pillar p{font-size:13.5px;color:var(--muted);font-weight:300;margin-top:3px;}
+
+.about-side{position:relative;}
+.about-contour{position:absolute;top:-70px;right:-46px;width:300px;color:rgba(47,93,80,.14);pointer-events:none;}
+.stats-card{
+  position:relative;background:var(--ink);color:var(--sand);border-radius:16px;
+  padding:34px 32px;box-shadow:var(--shadow);z-index:2;
+}
+.stats-card::before{
+  content:"";position:absolute;inset:0;border-radius:16px;border:1px solid var(--line-l);
+  pointer-events:none;
+}
+.stats-grid{display:grid;grid-template-columns:1fr 1fr;gap:26px 20px;margin-top:8px;}
+.stat b{display:block;font-family:var(--serif);font-weight:900;font-size:2.3rem;color:#F0C39A;line-height:1.1;font-variant-numeric:tabular-nums;}
+.stat span{font-size:13px;color:rgba(239,233,219,.68);letter-spacing:.12em;}
+.stats-note{margin-top:26px;padding-top:20px;border-top:1px solid var(--line-l);font-size:12.5px;color:rgba(239,233,219,.55);font-weight:300;}
+
+/* ============================================================
+   研究方向
+   ============================================================ */
+.research-grid{display:grid;grid-template-columns:repeat(2,1fr);gap:22px;}
+.res-card{
+  position:relative;background:#fff;border:1px solid var(--line);border-radius:var(--radius);
+  padding:32px 30px 28px;overflow:hidden;transition:transform .22s ease,box-shadow .22s ease;
+}
+.res-card:hover{transform:translateY(-3px);box-shadow:var(--shadow);}
+.res-card::after{
+  content:"";position:absolute;right:-30px;bottom:-30px;width:150px;height:150px;
+  border:1px solid rgba(47,93,80,.12);border-radius:50%;
+  box-shadow:0 0 0 14px rgba(47,93,80,.05),0 0 0 28px rgba(47,93,80,.035);
+  pointer-events:none;
+}
+.res-icon{width:46px;height:46px;border-radius:11px;display:grid;place-items:center;background:rgba(201,111,51,.12);color:var(--clay);margin-bottom:18px;}
+.res-icon svg{width:23px;height:23px;}
+.res-card h3{font-family:var(--serif);font-weight:700;font-size:1.22rem;color:var(--ink);letter-spacing:.02em;}
+.res-tag{display:inline-block;margin:10px 0 12px;font-size:11px;letter-spacing:.2em;color:var(--pine);}
+.res-card p{font-size:14px;color:var(--muted);font-weight:300;}
+
+/* ============================================================
+   团队
+   ============================================================ */
+.team-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:20px;}
+.member{
+  background:#fff;border:1px solid var(--line);border-radius:var(--radius);overflow:hidden;
+  transition:transform .22s ease,box-shadow .22s ease;
+}
+.member:hover{transform:translateY(-3px);box-shadow:var(--shadow);}
+.member-photo{aspect-ratio:1/1;overflow:hidden;position:relative;}
+.member-photo img{width:100%;height:100%;object-fit:cover;transition:transform .45s ease;}
+.member:hover .member-photo img{transform:scale(1.05);}
+.member-photo::after{
+  content:"";position:absolute;inset:0;
+  background:linear-gradient(180deg,transparent 55%,rgba(19,43,36,.55));
+}
+.member-info{padding:18px 20px 20px;}
+.member-info h3{font-family:var(--serif);font-weight:700;font-size:1.08rem;color:var(--ink);}
+.member-role{font-size:12.5px;color:var(--clay);letter-spacing:.1em;margin-top:3px;}
+.member-desc{font-size:13px;color:var(--muted);font-weight:300;margin-top:9px;line-height:1.6;}
+.member-coord{margin-top:12px;padding-top:10px;border-top:1px dashed var(--line);font-size:11px;letter-spacing:.14em;color:var(--pine);display:flex;align-items:center;gap:6px;}
+.member-coord svg{width:13px;height:13px;}
+
+/* ============================================================
+   足迹 / 项目
+   ============================================================ */
+.field-grid{display:grid;grid-template-columns:repeat(2,1fr);gap:22px;margin-bottom:46px;}
+.field-card{
+  position:relative;border-radius:var(--radius);overflow:hidden;border:1px solid var(--line);
+  background:var(--ink);min-height:280px;display:flex;align-items:flex-end;
+}
+.field-card img{position:absolute;inset:0;width:100%;height:100%;object-fit:cover;opacity:.78;transition:transform .5s ease;}
+.field-card:hover img{transform:scale(1.04);}
+.field-card::after{content:"";position:absolute;inset:0;background:linear-gradient(180deg,transparent 30%,rgba(19,43,36,.86));}
+.field-cap{position:relative;z-index:2;padding:24px 26px;color:var(--sand);}
+.field-cap small{font-size:11px;letter-spacing:.3em;color:#F0C39A;display:block;margin-bottom:6px;}
+.field-cap h3{font-family:var(--serif);font-weight:700;font-size:1.25rem;}
+
+.projects{border:1px solid var(--line);border-radius:var(--radius);background:#fff;overflow:hidden;}
+.proj{display:grid;grid-template-columns:92px 1fr;gap:20px;padding:20px 26px;align-items:start;}
+.proj + .proj{border-top:1px solid var(--line);}
+.proj-year{font-family:var(--serif);font-weight:700;color:var(--clay);font-size:1.05rem;padding-top:2px;font-variant-numeric:tabular-nums;}
+.proj h4{font-size:15px;font-weight:600;color:var(--ink);letter-spacing:.02em;}
+.proj p{font-size:13.5px;color:var(--muted);font-weight:300;margin-top:4px;}
+
+/* ============================================================
+   联系
+   ============================================================ */
+.contact-grid{display:grid;grid-template-columns:.9fr 1.1fr;gap:60px;align-items:start;}
+.contact-item{display:flex;gap:16px;align-items:flex-start;padding:16px 0;}
+.contact-item + .contact-item{border-top:1px dashed var(--line);}
+.contact-ic{flex:none;width:40px;height:40px;border-radius:10px;display:grid;place-items:center;background:rgba(47,93,80,.1);color:var(--pine);}
+.contact-ic svg{width:19px;height:19px;}
+.contact-item h4{font-size:13px;letter-spacing:.14em;color:var(--muted);font-weight:500;}
+.contact-item p{font-size:15px;color:var(--ink);margin-top:2px;font-weight:400;}
+.contact-form{
+  background:#fff;border:1px solid var(--line);border-radius:16px;padding:34px 32px;
+}
+.form-row{display:grid;grid-template-columns:1fr 1fr;gap:16px;}
+.form-field{margin-bottom:16px;}
+.form-field label{display:block;font-size:12.5px;letter-spacing:.12em;color:var(--muted);margin-bottom:7px;font-weight:500;}
+.form-field input,.form-field textarea{
+  width:100%;border:1px solid var(--line);border-radius:9px;background:var(--paper);
+  padding:12px 14px;font-family:inherit;font-size:14.5px;color:var(--text);
+  transition:border-color .2s,box-shadow .2s;min-height:48px;
+}
+.form-field textarea{min-height:120px;resize:vertical;}
+.form-field input:focus,.form-field textarea:focus{outline:none;border-color:var(--clay);box-shadow:0 0 0 3px rgba(201,111,51,.14);}
+.form-note{font-size:12px;color:var(--muted);font-weight:300;margin-top:14px;}
+.form-ok{
+  display:none;margin-top:16px;padding:13px 16px;border-radius:9px;
+  background:rgba(47,93,80,.1);color:var(--pine);font-size:14px;border:1px solid rgba(47,93,80,.3);
+}
+
+/* ============================================================
+   页脚
+   ============================================================ */
+.site-footer{background:var(--ink);color:var(--sand);padding:64px 0 30px;position:relative;overflow:hidden;}
+.footer-contour{position:absolute;left:-110px;bottom:-140px;width:520px;color:rgba(239,233,219,.07);pointer-events:none;}
+.footer-grid{display:grid;grid-template-columns:1.3fr 1fr 1fr;gap:44px;position:relative;z-index:2;}
+.footer-brand p{font-size:13.5px;color:rgba(239,233,219,.62);font-weight:300;margin-top:14px;max-width:300px;}
+.footer-col h4{font-size:12px;letter-spacing:.3em;color:#F0C39A;font-weight:500;margin-bottom:18px;}
+.footer-col ul{list-style:none;display:grid;gap:11px;}
+.footer-col a{font-size:14px;color:rgba(239,233,219,.78);transition:color .2s;}
+.footer-col a:hover{color:#fff;}
+.footer-col li{font-size:14px;color:rgba(239,233,219,.78);font-weight:300;}
+.footer-bottom{
+  margin-top:52px;padding-top:24px;border-top:1px solid var(--line-l);
+  display:flex;justify-content:space-between;gap:16px;flex-wrap:wrap;
+  font-size:12px;color:rgba(239,233,219,.5);letter-spacing:.08em;position:relative;z-index:2;
+}
+
+/* ============================================================
+   动效：滚动渐显
+   ============================================================ */
+.reveal{opacity:0;transform:translateY(22px);transition:opacity .7s ease,transform .7s ease;}
+.reveal.in{opacity:1;transform:none;}
+@media (prefers-reduced-motion:reduce){
+  html{scroll-behavior:auto;}
+  .reveal{opacity:1;transform:none;transition:none;}
+  *{animation:none !important;transition:none !important;}
+}
+
+/* ============================================================
+   响应式
+   ============================================================ */
+@media (max-width:1024px){
+  .team-grid{grid-template-columns:repeat(2,1fr);}
+  .about-grid{grid-template-columns:1fr;gap:44px;}
+  .contact-grid{grid-template-columns:1fr;gap:40px;}
+  .hero-loc{display:none;}
+}
+@media (max-width:760px){
+  section{padding:72px 0;}
+  .research-grid,.field-grid{grid-template-columns:1fr;}
+  .form-row{grid-template-columns:1fr;}
+  .stats-grid{gap:20px 14px;}
+  .footer-grid{grid-template-columns:1fr;gap:34px;}
+  .nav-links{
+    position:fixed;inset:var(--nav-h) 0 auto 0;flex-direction:column;align-items:stretch;
+    background:rgba(19,43,36,.97);backdrop-filter:blur(14px);
+    padding:14px 20px 26px;gap:4px;border-bottom:1px solid var(--line-l);
+    transform:translateY(-16px);opacity:0;pointer-events:none;
+    transition:transform .25s ease,opacity .25s ease;
+  }
+  .nav-links.open{transform:none;opacity:1;pointer-events:auto;}
+  .nav-links a{padding:14px 12px;font-size:15px;}
+  .nav-cta{margin-left:0;margin-top:8px;text-align:center;}
+  .nav-toggle{display:grid;}
+  .hero-actions .btn{width:100%;}
+  .proj{grid-template-columns:1fr;gap:6px;}
+}
+</style>
+</head>
+<body>
+
+<!-- ================= 导航 ================= -->
+<header class="site-nav">
+  <div class="wrap nav-inner">
+    <a class="brand" href="#home" aria-label="经纬地理团队 首页">
+      <span class="brand-mark" aria-hidden="true">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" width="20" height="20"><circle cx="12" cy="12" r="8.2"/><path d="M12 3.8v16.4M3.8 12h16.4"/><circle cx="12" cy="12" r="2.4" fill="currentColor" stroke="none"/></svg>
+      </span>
+      <span class="brand-name">经纬地理团队<small>MERIDIAN GEO</small></span>
+    </a>
+    <button class="nav-toggle" id="navToggle" aria-label="打开菜单" aria-expanded="false">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7"><path d="M4 7h16M4 12h16M4 17h16"/></svg>
+    </button>
+    <ul class="nav-links" id="navLinks">
+      <li><a href="#about">关于</a></li>
+      <li><a href="#research">研究方向</a></li>
+      <li><a href="#team">团队</a></li>
+      <li><a href="#fieldwork">足迹</a></li>
+      <li><a href="#contact">联系</a></li>
+      <li><a class="nav-cta" href="#contact">加入我们</a></li>
+    </ul>
+  </div>
+</header>
+
+<main>
+<!-- ================= Hero ================= -->
+<section class="hero" id="home">
+  <div class="hero-bg"><img src="https://aka.doubaocdn.com/s/Z1EQYNmwap" alt="晨雾中的山脉与蜿蜒河谷航拍"></div>
+  <!-- 等高线签名元素 -->
+  <svg class="hero-contour" viewBox="0 0 520 480" fill="none" stroke="currentColor" stroke-width="1.2" aria-hidden="true">
+    <path d="M60,330 C95,225 205,180 300,205 C395,230 465,290 455,360 C445,430 370,455 295,440 C220,425 130,440 60,330Z"/>
+    <path d="M105,335 C135,250 220,215 300,235 C380,255 430,305 425,358 C420,410 365,430 305,418 C245,406 170,420 105,335Z"/>
+    <path d="M150,338 C172,275 235,248 298,262 C361,276 398,315 394,355 C390,395 355,410 305,400 C255,390 195,400 150,338Z"/>
+    <path d="M330,120 C370,90 440,95 465,130 C490,165 480,215 445,230 C410,245 360,235 345,205 C330,175 300,150 330,120Z"/>
+    <path d="M350,130 C382,108 435,112 453,138 C471,164 464,200 438,212 C412,224 374,216 362,194 C350,172 328,152 350,130Z"/>
+  </svg>
+  <div class="hero-loc">31°51′N · 117°17′E</div>
+
+  <div class="wrap hero-inner">
+    <span class="hero-eyebrow">MERIDIAN GEO · 地理研究团队</span>
+    <h1>以脚步丈量大地<br><em>以数据读懂山河</em></h1>
+    <p class="hero-sub">我们是一支专注自然地理、空间信息与区域发展的研究团队。把测绘图纸、遥感影像与脚下的大地对照着看——在野外与数据之间，寻找关于这片土地的答案。</p>
+    <div class="hero-actions">
+      <a class="btn btn-solid" href="#about">
+        了解团队
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M5 12h14M13 6l6 6-6 6"/></svg>
+      </a>
+      <a class="btn btn-ghost" href="#research">研究方向</a>
+    </div>
+  </div>
+  <div class="hero-scroll" aria-hidden="true">SCROLL</div>
+</section>
+
+<!-- ================= 关于 ================= -->
+<section id="about">
+  <div class="wrap">
+    <div class="sec-head reveal">
+      <span class="eyebrow">About <span class="coord">· 31.85°N 117.28°E</span></span>
+      <h2 class="sec-title">真正的地理不在屏幕里，<br>而在山脊与河谷之间</h2>
+    </div>
+    <div class="about-grid">
+      <div class="about-body reveal">
+        <p>经纬地理团队成立于十年前的一次山区联合考察。那时我们只相信一件事：<strong>数据要走出实验室，去和真实的地形对质</strong>。这个信念延续至今——每个课题，都从一张等高线地图和一双登山鞋开始。</p>
+        <p>今天，团队由自然地理、地理信息系统与人文地理背景的研究者组成，长期关注流域过程、地表变化与区域发展。我们为政府部门、科研机构与规划单位提供野外调查、空间分析与决策支持，<strong>让每一份报告都建立在可追溯的现场观测之上</strong>。</p>
+        <div class="pillars">
+          <div class="pillar">
+            <span class="pillar-icon" aria-hidden="true">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7"><circle cx="12" cy="12" r="8.6"/><path d="M12 5.2v13.6M5.2 12h13.6M12 12l3.8-3.8" stroke-linecap="round"/></svg>
+            </span>
+            <div><h3>野外为本</h3><p>重要结论必须经过现场验证，足迹遍布山地、河谷与城乡边缘带。</p></div>
+          </div>
+          <div class="pillar">
+            <span class="pillar-icon" aria-hidden="true">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7"><rect x="3.5" y="3.5" width="17" height="17" rx="1.5"/><path d="M3.5 9h17M9 3.5v17"/><circle cx="14.5" cy="14.5" r="2"/></svg>
+            </span>
+            <div><h3>数据驱动</h3><p>遥感、GIS 与实地采样相结合，用可复算的空间分析支撑判断。</p></div>
+          </div>
+          <div class="pillar">
+            <span class="pillar-icon" aria-hidden="true">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7"><path d="M17 3l4 4-4 4M21 7H8M7 21l-4-4 4-4M3 17h13" stroke-linecap="round" stroke-linejoin="round"/></svg>
+            </span>
+            <div><h3>成果共享</h3><p>开放数据与公开报告，让研究结论经得起同行与公众的检验。</p></div>
+          </div>
+        </div>
+      </div>
+      <div class="about-side reveal">
+        <svg class="about-contour" viewBox="0 0 300 300" fill="none" stroke="currentColor" stroke-width="1.1" aria-hidden="true">
+          <path d="M40,200 C60,130 140,100 200,120 C260,140 285,195 268,245 C251,295 185,310 135,290 C85,270 20,270 40,200Z"/>
+          <path d="M75,200 C90,150 150,125 198,140 C246,155 262,195 250,232 C238,269 192,282 150,268 C108,254 60,250 75,200Z"/>
+          <path d="M110,198 C120,165 160,148 195,158 C230,168 240,195 232,220 C224,245 196,254 168,244 C140,234 100,230 110,198Z"/>
+        </svg>
+        <div class="stats-card">
+          <span class="eyebrow on-dark">Team In Numbers</span>
+          <div class="stats-grid">
+            <div class="stat"><b>10+</b><span>年持续深耕</span></div>
+            <div class="stat"><b>4</b><span>大研究方向</span></div>
+            <div class="stat"><b>30+</b><span>合作课题项目</span></div>
+            <div class="stat"><b>20+</b><span>野外考察区域</span></div>
+          </div>
+          <p class="stats-note">数据为团队公开项目与考察记录的累计概况，随年度更新。</p>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ================= 研究方向 ================= -->
+<section class="alt" id="research">
+  <div class="wrap">
+    <div class="sec-head reveal">
+      <span class="eyebrow">Research <span class="coord">· 研究方向</span></span>
+      <h2 class="sec-title">四个方向，一条主线：理解土地的过去、现在与可能</h2>
+      <p class="sec-lead">研究从具体的问题出发——一条河的走向、一座城的扩张、一片山体的风险，都指向对地表过程与人类活动的深层理解。</p>
+    </div>
+    <div class="research-grid">
+      <article class="res-card reveal">
+        <span class="res-icon" aria-hidden="true">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7"><path d="M3 18l6-9 4 6 3-4 5 7H3z" stroke-linejoin="round"/><path d="M3 21h18" stroke-linecap="round"/></svg>
+        </span>
+        <h3>自然地理与地貌演化</h3>
+        <span class="res-tag">GEOMORPHOLOGY</span>
+        <p>聚焦河流地貌、山地区域过程与地表侵蚀，通过长期监测与地层证据重建地貌演化历史。</p>
+      </article>
+      <article class="res-card reveal">
+        <span class="res-icon" aria-hidden="true">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7"><rect x="3.5" y="3.5" width="17" height="17" rx="1.5"/><path d="M3.5 9h17M9 3.5v17"/><circle cx="14.5" cy="14.5" r="2.6"/></svg>
+        </span>
+        <h3>地理信息系统与遥感</h3>
+        <span class="res-tag">GIS &amp; REMOTE SENSING</span>
+        <p>多源遥感影像与空间分析方法，用于地表覆盖变化、灾害风险制图与地理数据平台建设。</p>
+      </article>
+      <article class="res-card reveal">
+        <span class="res-icon" aria-hidden="true">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7"><path d="M3.5 10c2.5-2.6 4.5-2.6 7 0s4.5 2.6 7 0 2.5-2.6 3.5-2.4" stroke-linecap="round"/><path d="M3.5 17c2.5-2.6 4.5-2.6 7 0s4.5 2.6 7 0 2.5-2.6 3.5-2.4" stroke-linecap="round"/></svg>
+        </span>
+        <h3>水文与气候变化响应</h3>
+        <span class="res-tag">HYDROLOGY &amp; CLIMATE</span>
+        <p>流域水文过程与气候变化影响评估，从降水、径流到水资源的长期变化趋势研究。</p>
+      </article>
+      <article class="res-card reveal">
+        <span class="res-icon" aria-hidden="true">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7"><path d="M4 21V11.5L12 4.5l8 7V21" stroke-linejoin="round"/><path d="M9.5 21v-6h5v6M4 9.5V5h3" stroke-linecap="round" stroke-linejoin="round"/></svg>
+        </span>
+        <h3>人文地理与区域规划</h3>
+        <span class="res-tag">HUMAN GEOGRAPHY</span>
+        <p>城乡聚落演变、人口流动与区域发展研究，为国土空间与公共政策提供地理视角。</p>
+      </article>
+    </div>
+  </div>
+</section>
+
+<!-- ================= 团队 ================= -->
+<section id="team">
+  <div class="wrap">
+    <div class="sec-head reveal">
+      <span class="eyebrow">Team <span class="coord">· 核心成员</span></span>
+      <h2 class="sec-title">四位领队，四套观察大地的镜头</h2>
+      <p class="sec-lead">团队成员背景互补：有人盯着等高线，有人盯着卫星图，有人盯着田野与街巷。共同点是都愿意为一条数据跑一天山路。</p>
+    </div>
+    <div class="team-grid">
+      <article class="member reveal">
+        <div class="member-photo"><img src="https://aka.doubaocdn.com/s/lT5VNtb0UL" alt="周怀远：团队负责人，自然地理学者"></div>
+        <div class="member-info">
+          <h3>周怀远</h3>
+          <div class="member-role">团队负责人 · 自然地理</div>
+          <p class="member-desc">主攻河流地貌与山地过程，十余年野外考察经验，坚信好数据来自好鞋底。</p>
+          <div class="member-coord">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M12 21s-7-6.1-7-11a7 7 0 0 1 14 0c0 4.9-7 11-7 11z"/><circle cx="12" cy="10" r="2.4"/></svg>
+            皖南 · 流域与山地
+          </div>
+        </div>
+      </article>
+      <article class="member reveal">
+        <div class="member-photo"><img src="https://aka.doubaocdn.com/s/0MCVdla2UU" alt="林岚：高级研究员，水文地理学者"></div>
+        <div class="member-info">
+          <h3>林岚</h3>
+          <div class="member-role">高级研究员 · 水文方向</div>
+          <p class="member-desc">负责流域水文观测与气候变化研究，常年在河岸与雨量站之间往返。</p>
+          <div class="member-coord">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M12 21s-7-6.1-7-11a7 7 0 0 1 14 0c0 4.9-7 11-7 11z"/><circle cx="12" cy="10" r="2.4"/></svg>
+            江淮 · 流域水文
+          </div>
+        </div>
+      </article>
+      <article class="member reveal">
+        <div class="member-photo"><img src="https://aka.doubaocdn.com/s/cHA4M4yJIX" alt="陈骁：GIS 工程师，空间信息方向"></div>
+        <div class="member-info">
+          <h3>陈骁</h3>
+          <div class="member-role">GIS 工程师 · 空间信息</div>
+          <p class="member-desc">搭建遥感分析与地理数据平台，把野外记录变成可复算的空间证据。</p>
+          <div class="member-coord">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M12 21s-7-6.1-7-11a7 7 0 0 1 14 0c0 4.9-7 11-7 11z"/><circle cx="12" cy="10" r="2.4"/></svg>
+            长三角 · 地表监测
+          </div>
+        </div>
+      </article>
+      <article class="member reveal">
+        <div class="member-photo"><img src="https://aka.doubaocdn.com/s/Ob0A2L4OEY" alt="苏晚：研究员，人文地理学者"></div>
+        <div class="member-info">
+          <h3>苏晚</h3>
+          <div class="member-role">研究员 · 人文地理</div>
+          <p class="member-desc">研究城乡聚落演变与区域发展，擅长在规划图纸外听见居民的声音。</p>
+          <div class="member-coord">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M12 21s-7-6.1-7-11a7 7 0 0 1 14 0c0 4.9-7 11-7 11z"/><circle cx="12" cy="10" r="2.4"/></svg>
+            皖江 · 城乡聚落
+          </div>
+        </div>
+      </article>
+    </div>
+  </div>
+</section>
+
+<!-- ================= 足迹 / 项目 ================= -->
+<section class="alt" id="fieldwork">
+  <div class="wrap">
+    <div class="sec-head reveal">
+      <span class="eyebrow">Fieldwork &amp; Projects <span class="coord">· 足迹与项目</span></span>
+      <h2 class="sec-title">答案在野外，也在数据里</h2>
+      <p class="sec-lead">每个项目都是一次从现场到成图的旅程：先在山里问出问题，再回到屏幕前把它算清楚。</p>
+    </div>
+    <div class="field-grid">
+      <figure class="field-card reveal">
+        <img src="https://aka.doubaocdn.com/s/UuKjQV91XS" alt="团队成员在山谷中手持地形图实地考察">
+        <figcaption class="field-cap">
+          <small>FIELDWORK · 野外考察</small>
+          <h3>在山谷里读图，也在图上读山谷</h3>
+        </figcaption>
+      </figure>
+      <figure class="field-card reveal">
+        <img src="https://aka.doubaocdn.com/s/AUdOOm1Otp" alt="工作台上展开的等高线测绘图纸与记录本">
+        <figcaption class="field-cap">
+          <small>DESK WORK · 内业制图</small>
+          <h3>野外的一天，内业的许多夜</h3>
+        </figcaption>
+      </figure>
+    </div>
+    <div class="projects reveal">
+      <div class="proj">
+        <div class="proj-year">2024</div>
+        <div>
+          <h4>皖南山区流域水文过程与洪水风险研究</h4>
+          <p>布设雨量-径流观测断面，结合历史洪痕调查，完成中小流域洪水风险分区制图。</p>
+        </div>
+      </div>
+      <div class="proj">
+        <div class="proj-year">2022</div>
+        <div>
+          <h4>长三角地表覆盖变化遥感监测</h4>
+          <p>基于多时相遥感影像与深度学习分类，产出近十年建成区扩张与耕地变化专题图。</p>
+        </div>
+      </div>
+      <div class="proj">
+        <div class="proj-year">2021</div>
+        <div>
+          <h4>丘陵地区地质灾害易发性评价</h4>
+          <p>整合坡度、岩性与降雨数据，构建滑坡易发性评价模型，服务国土空间防灾规划。</p>
+        </div>
+      </div>
+      <div class="proj">
+        <div class="proj-year">2019</div>
+        <div>
+          <h4>皖江城市带聚落演变与区域发展研究</h4>
+          <p>以历史地图与人口普查数据重建聚落扩张过程，探讨快速城镇化下的空间治理路径。</p>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ================= 联系 ================= -->
+<section id="contact">
+  <div class="wrap">
+    <div class="sec-head reveal">
+      <span class="eyebrow">Contact <span class="coord">· 联系我们</span></span>
+      <h2 class="sec-title">有课题合作，或只是一张想探讨的地图？</h2>
+      <p class="sec-lead">无论是项目委托、数据合作还是学术交流，欢迎来信。我们通常会在两个工作日内回复。</p>
+    </div>
+    <div class="contact-grid">
+      <div class="contact-info reveal">
+        <div class="contact-item">
+          <span class="contact-ic" aria-hidden="true">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7"><rect x="3.5" y="5.5" width="17" height="13" rx="2"/><path d="M4 7l8 6 8-6" stroke-linecap="round"/></svg>
+          </span>
+          <div><h4>邮箱</h4><p>contact@meridiangeo.cn</p></div>
+        </div>
+        <div class="contact-item">
+          <span class="contact-ic" aria-hidden="true">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7"><path d="M12 21s-7-6.1-7-11a7 7 0 0 1 14 0c0 4.9-7 11-7 11z"/><circle cx="12" cy="10" r="2.4"/></svg>
+          </span>
+          <div><h4>地址</h4><p>安徽省合肥市 · 蜀山区（办公室兼野外装备仓库）</p></div>
+        </div>
+        <div class="contact-item">
+          <span class="contact-ic" aria-hidden="true">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7"><circle cx="12" cy="12" r="8.6"/><path d="M12 5.2v13.6M5.2 12h13.6M12 12l3.8-3.8" stroke-linecap="round"/></svg>
+          </span>
+          <div><h4>坐标</h4><p>31°51′N · 117°17′E（欢迎按图索骥）</p></div>
+        </div>
+      </div>
+      <form class="contact-form reveal" id="contactForm" novalidate>
+        <div class="form-row">
+          <div class="form-field">
+            <label for="fName">姓名</label>
+            <input id="fName" name="name" type="text" placeholder="怎么称呼您" required>
+          </div>
+          <div class="form-field">
+            <label for="fMail">邮箱</label>
+            <input id="fMail" name="email" type="email" placeholder="name@example.com" required>
+          </div>
+        </div>
+        <div class="form-field">
+          <label for="fTopic">事由</label>
+          <input id="fTopic" name="topic" type="text" placeholder="课题合作 / 数据咨询 / 学术交流…">
+        </div>
+        <div class="form-field">
+          <label for="fMsg">留言</label>
+          <textarea id="fMsg" name="message" placeholder="简单介绍一下您想聊的事情…" required></textarea>
+        </div>
+        <button class="btn btn-solid" type="submit" style="width:100%;">
+          发送留言
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M5 12h14M13 6l6 6-6 6"/></svg>
+        </button>
+        <p class="form-note">提交即代表同意我们使用该信息与您联系。表单仅作演示，不会真实发送。</p>
+        <div class="form-ok" id="formOk" role="status">已收到，感谢您的来信。我们会尽快与您联系。</div>
+      </form>
+    </div>
+  </div>
+</section>
+</main>
+
+<!-- ================= 页脚 ================= -->
+<footer class="site-footer">
+  <svg class="footer-contour" viewBox="0 0 520 480" fill="none" stroke="currentColor" stroke-width="1.2" aria-hidden="true">
+    <path d="M60,330 C95,225 205,180 300,205 C395,230 465,290 455,360 C445,430 370,455 295,440 C220,425 130,440 60,330Z"/>
+    <path d="M105,335 C135,250 220,215 300,235 C380,255 430,305 425,358 C420,410 365,430 305,418 C245,406 170,420 105,335Z"/>
+    <path d="M150,338 C172,275 235,248 298,262 C361,276 398,315 394,355 C390,395 355,410 305,400 C255,390 195,400 150,338Z"/>
+  </svg>
+  <div class="wrap">
+    <div class="footer-grid">
+      <div class="footer-brand">
+        <a class="brand" href="#home">
+          <span class="brand-mark" aria-hidden="true">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" width="20" height="20"><circle cx="12" cy="12" r="8.2"/><path d="M12 3.8v16.4M3.8 12h16.4"/><circle cx="12" cy="12" r="2.4" fill="currentColor" stroke="none"/></svg>
+          </span>
+          <span class="brand-name">经纬地理团队<small>MERIDIAN GEO</small></span>
+        </a>
+        <p>以脚步丈量大地，以数据读懂山河。一支行走在野外与数据之间的地理研究团队。</p>
+      </div>
+      <div class="footer-col">
+        <h4>站点导航</h4>
+        <ul>
+          <li><a href="#about">关于团队</a></li>
+          <li><a href="#research">研究方向</a></li>
+          <li><a href="#team">核心成员</a></li>
+          <li><a href="#fieldwork">足迹与项目</a></li>
+          <li><a href="#contact">联系我们</a></li>
+        </ul>
+      </div>
+      <div class="footer-col">
+        <h4>联系方式</h4>
+        <ul>
+          <li>contact@meridiangeo.cn</li>
+          <li>安徽省合肥市 · 蜀山区</li>
+          <li>31°51′N · 117°17′E</li>
+        </ul>
+      </div>
+    </div>
+    <div class="footer-bottom">
+      <span>© 2026 经纬地理团队 · MERIDIAN GEO</span>
+      <span>FIELD-FIRST · DATA-DRIVEN · OPEN</span>
+    </div>
+  </div>
+</footer>
+
+<script>
+(function(){
+  "use strict";
+
+  /* ---------- 移动端导航 ---------- */
+  var toggle = document.getElementById("navToggle");
+  var links  = document.getElementById("navLinks");
+  if(toggle && links){
+    toggle.addEventListener("click", function(){
+      var open = links.classList.toggle("open");
+      toggle.setAttribute("aria-expanded", open ? "true" : "false");
+      toggle.setAttribute("aria-label", open ? "关闭菜单" : "打开菜单");
+    });
+    links.addEventListener("click", function(e){
+      if(e.target.closest("a")){
+        links.classList.remove("open");
+        toggle.setAttribute("aria-expanded","false");
+        toggle.setAttribute("aria-label","打开菜单");
+      }
+    });
+  }
+
+  /* ---------- 滚动渐显 ---------- */
+  var revealEls = document.querySelectorAll(".reveal");
+  if("IntersectionObserver" in window){
+    var io = new IntersectionObserver(function(entries){
+      entries.forEach(function(en){
+        if(en.isIntersecting){
+          en.target.classList.add("in");
+          io.unobserve(en.target);
+        }
+      });
+    }, {threshold:.14, rootMargin:"0px 0px -8% 0px"});
+    revealEls.forEach(function(el){ io.observe(el); });
+  }else{
+    revealEls.forEach(function(el){ el.classList.add("in"); });
+  }
+
+  /* ---------- 导航栏滚动加深 ---------- */
+  var nav = document.querySelector(".site-nav");
+  window.addEventListener("scroll", function(){
+    nav.style.background = window.scrollY > 40
+      ? "rgba(19,43,36,.94)"
+      : "rgba(19,43,36,.82)";
+  }, {passive:true});
+
+  /* ---------- 联系表单（演示） ---------- */
+  var form = document.getElementById("contactForm");
+  if(form){
+    form.addEventListener("submit", function(e){
+      e.preventDefault();
+      var ok = document.getElementById("formOk");
+      ok.style.display = "block";
+      form.querySelectorAll("input,textarea").forEach(function(el){ el.value=""; });
+      setTimeout(function(){ ok.style.display = "none"; }, 6000);
+    });
+  }
+})();
+</script>
+</body>
+</html>
